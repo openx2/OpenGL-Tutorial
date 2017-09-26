@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-
+#include <gl/glut.h>
 
 int main()
 {
