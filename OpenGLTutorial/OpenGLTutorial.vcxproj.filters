@@ -35,10 +35,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="OpenGLTutorial.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="OpenGLTutorial.cpp">
+    <ClCompile Include="ogldev_math_3d.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ogldev_util.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

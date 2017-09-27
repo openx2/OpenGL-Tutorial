@@ -5,12 +5,17 @@
 #include <GL/glew.h>
 #include <gl/glut.h>
 
+#include "ogldev_util.h"
 #include "ogldev_math_3d.h"
 
 GLuint VBO; //全局的GLuint引用，用于操作顶点缓冲器对象。大多OpenGL对象都是通过GLuint类型的变量来引用的
 
+// 定义要使用的vertex shader和fragment shader的文件名，作为文件读取路径
+const char* pVSfilename = "shader.vs";
+const char* pFSfilename = "shader.fs";
+
 /*渲染回调函数*/
-void RenderScenceCB()
+static void RenderScenceCB()
 {
 	//清空帧缓冲（使用clear color）
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -20,7 +25,7 @@ void RenderScenceCB()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);						//告诉管线解析Buffer中数据的方式
 	
 	//调用参数回调来绘制几何图形。这个指令是GPU真正开始工作的地方
-	glDrawArrays(GL_TRIANGLES, 0, 3);											//要绘制一个三角形，从第一个顶点的索引0开始，绘制3个顶点
+	glDrawArrays(GL_TRIANGLES, 0, 3);											//依然是绘制一个三角形
 
 	glDisableVertexAttribArray(0);												//禁用顶点属性index，在着色器不用时禁用可以提高性能
 
@@ -28,7 +33,12 @@ void RenderScenceCB()
 	glutSwapBuffers();
 }
 
-void createVertexBuffer()
+static void initializeGlutCallbacks()
+{
+	glutDisplayFunc(RenderScenceCB); //设置显示控制回调函数
+}
+
+static void createVertexBuffer()
 {
 	// 创建含有三个顶点的顶点数组，3个顶点构成一个三角形
 	Vector3f vertices[3];
@@ -42,6 +52,82 @@ void createVertexBuffer()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);	//对目标名称参数绑定顶点数据
 }
 
+static void addShader(GLuint shaderProgram, const char* pShaderText, GLenum shaderType)
+{
+	// 根据shader类型定义shader对象
+	GLuint shaderObj = glCreateShader(shaderType);
+	// 检查是否定义成功
+	if (shaderObj == 0) {
+		fprintf(stderr, "Error creating shader type %d\n", shaderType);
+		exit(1);
+	}
+
+	// 定义shader的源码
+	const char* p[1];
+	p[0] = pShaderText;
+	GLint lengths[1];
+	lengths[0] = strlen(pShaderText);
+	glShaderSource(shaderObj, 1, p, lengths);
+	glCompileShader(shaderObj);	//编译shader对象
+
+	// 得到编译状态，检查shader源码是否有错误
+	GLint success;
+	glGetShaderiv(shaderObj, shaderType, &success);
+	if (!success) {
+		GLchar infoLog[1024];
+		glGetShaderInfoLog(shaderObj, 1024, NULL, infoLog);
+		fprintf(stderr, "Error compile shader type %d: '%s'\n", shaderType, infoLog);
+		exit(1);
+	}
+
+	// 将编译好的ShaderObj绑定到ShaderProgram上
+	glAttachShader(shaderProgram, shaderObj);
+}
+
+static void compileShader()
+{
+	GLuint shaderProgram = glCreateProgram(); //创建一个程序对象，之后会把所有shader链接起来，放到该对象中
+	// 检查是否创建成功
+	if (shaderProgram == 0) {
+		fprintf(stderr, "Error creating shader program\n");
+		exit(1);
+	}
+
+	// 存储shader源码的字符串缓存
+	string vs, fs;
+	if (!ReadFile(pVSfilename, vs))
+		exit(1);
+	if (!ReadFile(pFSfilename, fs))
+		exit(1);
+
+	// 添加vertex shader和fragment shader
+	addShader(shaderProgram, vs.c_str(), GL_VERTEX_SHADER);
+	addShader(shaderProgram, fs.c_str(), GL_FRAGMENT_SHADER);
+
+	// 对程序对象进行链接操作，并检查有无错误
+	glLinkProgram(shaderProgram);
+	GLint success;
+	GLchar errorLog[1024] = { 0 };
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(shaderProgram, sizeof(errorLog), NULL, errorLog);
+		fprintf(stderr, "Error linking shader program: '%s'\n", errorLog);
+		exit(1);
+	}
+
+	// 检查验证当前管线状态下程序是否能被执行
+	glValidateProgram(shaderProgram);
+	glGetProgramiv(shaderProgram, GL_VALIDATE_STATUS, &success);
+	if (!success) {
+		glGetProgramInfoLog(shaderProgram, sizeof(errorLog), NULL, errorLog);
+		fprintf(stderr, "Invalid shader program: '%s'\n", errorLog);
+		exit(1);
+	}
+
+	// 声明管线要使用上面建立的shader程序
+	glUseProgram(shaderProgram);
+}
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv); //直接引用command line，初始化glut
@@ -50,21 +136,27 @@ int main(int argc, char** argv)
 	//设置窗口属性
 	glutInitWindowSize(480, 320);
 	glutInitWindowPosition(100, 100);
-	glutCreateWindow("Tutorial 02");
+	glutCreateWindow("Tutorial 04");
 
 	//设置回调函数，GLUT通过回调函数与底层窗口系统交互
-	glutDisplayFunc(RenderScenceCB);
+	initializeGlutCallbacks();
 
+	// 初始化GLEW，要在glut初始化之后
 	GLenum res = glewInit();
 	if (res != GLEW_OK) {
 		fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
 		return 1;
 	}
 
+	printf("GL version: %s\n", glGetString(GL_VERSION)); //显示OpenGL版本
+
 	//设置状态（Opengl是一个状态机）
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f); //将帧缓冲的clear color设为(0,0,0,0)(RGBA),4个值的范围都是0.0f~1.0f
 
 	createVertexBuffer(); //创建顶点缓冲器
+
+	// 创建和设置要使用的Shader
+	compileShader();
 
 	//将控制交给GLUT内部循环
 	glutMainLoop();
