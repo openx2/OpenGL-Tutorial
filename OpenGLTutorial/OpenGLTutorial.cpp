@@ -62,6 +62,8 @@ int main(int argc, char** argv)
 	//设置状态（Opengl是一个状态机）
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f); //将帧缓冲的clear color设为(0,0,0,0)(RGBA),4个值的范围都是0.0f~1.0f
 
+	createVertexBuffer(); //创建顶点缓冲器
+
 	//将控制交给GLUT内部循环
 	glutMainLoop();
     return 0;
