@@ -20,7 +20,7 @@ void RenderScenceCB()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);						//告诉管线解析Buffer中数据的方式
 	
 	//调用参数回调来绘制几何图形。这个指令是GPU真正开始工作的地方
-	glDrawArrays(GL_POINTS, 0, 1);												//要绘制一系列点，从第一个顶点的索引0开始，绘制1个顶点
+	glDrawArrays(GL_TRIANGLES, 0, 3);											//要绘制一个三角形，从第一个顶点的索引0开始，绘制3个顶点
 
 	glDisableVertexAttribArray(0);												//禁用顶点属性index，在着色器不用时禁用可以提高性能
 
@@ -30,10 +30,12 @@ void RenderScenceCB()
 
 void createVertexBuffer()
 {
-	// 创建含有一个顶点的顶点数组
-	Vector3f vertices[1];
-	// 将点置于屏幕中央（在进入光栅器之前，x,y,z坐标的范围都是[-1.0, 1.0]）
-	vertices[0] = Vector3f(0.0f, 0.0f, 0.0f);
+	// 创建含有三个顶点的顶点数组，3个顶点构成一个三角形
+	Vector3f vertices[3];
+	// 三角形的3个顶点的坐标（在进入光栅器之前，x,y,z坐标的范围都是[-1.0, 1.0]）
+	vertices[0] = Vector3f(-1.0f, -1.0f, 0.0f);
+	vertices[1] = Vector3f(1.0f, -1.0f, 0.0f);
+	vertices[2] = Vector3f(0.0f, 1.0f, 0.0f);
 
 	glGenBuffers(1, &VBO);														//分配1个对象的handle
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);											//将handle绑定到目标名称上，之后在目标名称上执行命令
@@ -61,6 +63,8 @@ int main(int argc, char** argv)
 
 	//设置状态（Opengl是一个状态机）
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f); //将帧缓冲的clear color设为(0,0,0,0)(RGBA),4个值的范围都是0.0f~1.0f
+
+	createVertexBuffer(); //创建顶点缓冲器
 
 	//将控制交给GLUT内部循环
 	glutMainLoop();
