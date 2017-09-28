@@ -9,6 +9,7 @@
 #include "ogldev_math_3d.h"
 
 GLuint VBO; //全局的GLuint引用，用于操作顶点缓冲器对象。大多OpenGL对象都是通过GLuint类型的变量来引用的
+GLuint gScaleLocation; // 一致变量gScale的位置
 
 // 定义要使用的vertex shader和fragment shader的文件名，作为文件读取路径
 const char* pVSfilename = "shader.vs";
@@ -17,6 +18,12 @@ const char* pFSfilename = "shader.fs";
 /*渲染回调函数*/
 static void RenderScenceCB()
 {
+	// 维护一个不断慢慢扩大的浮点数
+	static float scale = 0.0f;
+	scale += 0.001f;
+	// 将值通过得到的一致变量位置传递给shader
+	glUniform1f(gScaleLocation, sinf(scale));
+
 	//清空帧缓冲（使用clear color）
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -36,6 +43,9 @@ static void RenderScenceCB()
 static void initializeGlutCallbacks()
 {
 	glutDisplayFunc(RenderScenceCB); //设置显示控制回调函数
+	//设置空闲回调函数，在不发生任何事件时会不断调用指定函数。如果指定函数不是渲染函数，
+	//则要在它最后调用glutPostRedisplay()，标记当前窗口要被重新绘制，否则闲置回调会不断调用但不会重新渲染
+	glutIdleFunc(RenderScenceCB);
 }
 
 static void createVertexBuffer()
@@ -126,6 +136,12 @@ static void compileShader()
 
 	// 声明管线要使用上面建立的shader程序
 	glUseProgram(shaderProgram);
+
+	// 查询获取一致变量的位置
+	// 在两种情况下会出现错误：1.变量名拼写错误;2.变量没有在程序中使用到，被编译器优化掉了
+	gScaleLocation = glGetUniformLocation(shaderProgram, "gScale");
+	// 检查错误
+	assert(gScaleLocation != 0xFFFFFFFF);
 }
 
 int main(int argc, char** argv)
