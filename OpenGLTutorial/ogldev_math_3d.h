@@ -246,7 +246,6 @@ struct Quaternion
  };
 
 
-/*
 class Matrix4f
 {
 public:
@@ -255,7 +254,7 @@ public:
     Matrix4f()
     {        
     }
-    
+    /*
     // constructor from Assimp matrix
     Matrix4f(const aiMatrix4x4& AssimpMatrix)
     {
@@ -272,7 +271,7 @@ public:
         m[2][0] = AssimpMatrix.c1; m[2][1] = AssimpMatrix.c2; m[2][2] = AssimpMatrix.c3; m[2][3] = 0.0f;
         m[3][0] = 0.0f           ; m[3][1] = 0.0f           ; m[3][2] = 0.0f           ; m[3][3] = 1.0f;
     }   
-    
+    */
     Matrix4f(float a00, float a01, float a02, float a03,
              float a10, float a11, float a12, float a13,
              float a20, float a21, float a22, float a23,
@@ -363,7 +362,7 @@ public:
     void InitPersProjTransform(const PersProjInfo& p);
     void InitOrthoProjTransform(const OrthoProjInfo& p);
 };
-*/
+
 Quaternion operator*(const Quaternion& l, const Quaternion& r);
 
 Quaternion operator*(const Quaternion& q, const Vector3f& v);

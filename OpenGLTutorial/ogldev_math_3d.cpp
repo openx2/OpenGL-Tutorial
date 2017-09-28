@@ -63,7 +63,7 @@ void Vector3f::Rotate(float Angle, const Vector3f& Axe)
     z = W.z;
 }
 
-/*
+
 void Matrix4f::InitScaleTransform(float ScaleX, float ScaleY, float ScaleZ)
 {
     m[0][0] = ScaleX; m[0][1] = 0.0f;   m[0][2] = 0.0f;   m[0][3] = 0.0f;
@@ -232,7 +232,7 @@ Matrix4f& Matrix4f::Inverse()
 
 	return *this;
 }
-*/
+
 Quaternion::Quaternion(float _x, float _y, float _z, float _w)
 {
     x = _x;

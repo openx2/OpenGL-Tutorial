@@ -9,7 +9,7 @@
 #include "ogldev_math_3d.h"
 
 GLuint VBO; //全局的GLuint引用，用于操作顶点缓冲器对象。大多OpenGL对象都是通过GLuint类型的变量来引用的
-GLuint gScaleLocation; // 一致变量gScale的位置
+GLuint gWorldLocation; // 平移变换的一致变量world的位置
 
 // 定义要使用的vertex shader和fragment shader的文件名，作为文件读取路径
 const char* pVSfilename = "shader.vs";
@@ -21,8 +21,13 @@ static void RenderScenceCB()
 	// 维护一个不断慢慢扩大的浮点数
 	static float scale = 0.0f;
 	scale += 0.001f;
+	Matrix4f world;
+	world.m[0][0] = 1.0f; world.m[0][1] = 0.0f; world.m[0][2] = 0.0f; world.m[0][3] = sinf(scale);
+	world.m[1][0] = 0.0f; world.m[1][1] = 1.0f; world.m[1][2] = 0.0f; world.m[1][3] = 0.0f;
+	world.m[2][0] = 0.0f; world.m[2][1] = 0.0f; world.m[2][2] = 1.0f; world.m[2][3] = 0.0f;
+	world.m[3][0] = 0.0f; world.m[3][1] = 0.0f; world.m[3][2] = 0.0f; world.m[3][3] = 1.0f;
 	// 将值通过得到的一致变量位置传递给shader
-	glUniform1f(gScaleLocation, sinf(scale));
+	glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &world.m[0][0]);
 
 	//清空帧缓冲（使用clear color）
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -139,9 +144,9 @@ static void compileShader()
 
 	// 查询获取一致变量的位置
 	// 在两种情况下会出现错误：1.变量名拼写错误;2.变量没有在程序中使用到，被编译器优化掉了
-	gScaleLocation = glGetUniformLocation(shaderProgram, "gScale");
+	gWorldLocation = glGetUniformLocation(shaderProgram, "gWorld");
 	// 检查错误
-	assert(gScaleLocation != 0xFFFFFFFF);
+	assert(gWorldLocation != 0xFFFFFFFF);
 }
 
 int main(int argc, char** argv)
