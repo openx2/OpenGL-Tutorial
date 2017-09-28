@@ -22,8 +22,8 @@ static void RenderScenceCB()
 	static float scale = 0.0f;
 	scale += 0.001f;
 	Matrix4f world;
-	world.m[0][0] = 1.0f; world.m[0][1] = 0.0f; world.m[0][2] = 0.0f; world.m[0][3] = sinf(scale);
-	world.m[1][0] = 0.0f; world.m[1][1] = 1.0f; world.m[1][2] = 0.0f; world.m[1][3] = 0.0f;
+	world.m[0][0] = cosf(scale); world.m[0][1] = -sinf(scale); world.m[0][2] = 0.0f; world.m[0][3] = 0.0f;
+	world.m[1][0] = sinf(scale); world.m[1][1] = cosf(scale); world.m[1][2] = 0.0f; world.m[1][3] = 0.0f;
 	world.m[2][0] = 0.0f; world.m[2][1] = 0.0f; world.m[2][2] = 1.0f; world.m[2][3] = 0.0f;
 	world.m[3][0] = 0.0f; world.m[3][1] = 0.0f; world.m[3][2] = 0.0f; world.m[3][3] = 1.0f;
 	// 将值通过得到的一致变量位置传递给shader
@@ -155,7 +155,7 @@ int main(int argc, char** argv)
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); //设置双缓冲和颜色缓冲
 
 	//设置窗口属性
-	glutInitWindowSize(480, 320);
+	glutInitWindowSize(480, 480);
 	glutInitWindowPosition(100, 100);
 	glutCreateWindow("Tutorial 04");
 
