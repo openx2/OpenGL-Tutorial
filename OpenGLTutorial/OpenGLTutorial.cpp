@@ -9,6 +9,7 @@
 #include "ogldev_math_3d.h"
 
 GLuint VBO; //全局的GLuint引用，用于操作顶点缓冲器对象。大多OpenGL对象都是通过GLuint类型的变量来引用的
+GLuint IBO; //索引缓冲器对象的GLuint引用
 GLuint gWorldLocation; // 平移变换的一致变量world的位置
 
 // 定义要使用的vertex shader和fragment shader的文件名，作为文件读取路径
@@ -22,9 +23,9 @@ static void RenderScenceCB()
 	static float scale = 0.0f;
 	scale += 0.001f;
 	Matrix4f world;
-	world.m[0][0] = sinf(scale); world.m[0][1] = 0.0f; world.m[0][2] = 0.0f; world.m[0][3] = 0.0f;
-	world.m[1][0] = 0.0f; world.m[1][1] = sinf(scale); world.m[1][2] = 0.0f; world.m[1][3] = 0.0f;
-	world.m[2][0] = 0.0f; world.m[2][1] = 0.0f; world.m[2][2] = sinf(scale); world.m[2][3] = 0.0f;
+	world.m[0][0] = cosf(scale); world.m[0][1] = 0.0f; world.m[0][2] = -sinf(scale); world.m[0][3] = 0.0f;
+	world.m[1][0] = 0.0f; world.m[1][1] = 1.0f; world.m[1][2] = 0.0f; world.m[1][3] = 0.0f;
+	world.m[2][0] = sinf(scale); world.m[2][1] = 0.0f; world.m[2][2] = cosf(scale); world.m[2][3] = 0.0f;
 	world.m[3][0] = 0.0f; world.m[3][1] = 0.0f; world.m[3][2] = 0.0f; world.m[3][3] = 1.0f;
 	// 将值通过得到的一致变量位置传递给shader
 	glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &world.m[0][0]);
@@ -35,9 +36,10 @@ static void RenderScenceCB()
 	glEnableVertexAttribArray(0);												//开启顶点属性对应的index，让顶点属性能够被shader看到。位置对应的顶点属性索引是0
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);											//再次绑定Buffer准备开始draw call回调。在有多个buffer时可以看出它的作用
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);						//告诉管线解析Buffer中数据的方式
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);									//在绘制前绑定索引缓冲
 	
 	//调用参数回调来绘制几何图形。这个指令是GPU真正开始工作的地方
-	glDrawArrays(GL_TRIANGLES, 0, 3);											//依然是绘制一个三角形
+	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);						//绘制四面体。第一个参数是图元类型，第二个是索引个数，第三个是索引的类型（即byte,short,int)，最后一个是从缓冲开始位置到扫描开始位置的偏移量（类型为GLvoid*）
 
 	glDisableVertexAttribArray(0);												//禁用顶点属性index，在着色器不用时禁用可以提高性能
 
@@ -55,16 +57,31 @@ static void initializeGlutCallbacks()
 
 static void createVertexBuffer()
 {
-	// 创建含有三个顶点的顶点数组，3个顶点构成一个三角形
-	Vector3f vertices[3];
-	// 三角形的3个顶点的坐标（在进入光栅器之前，x,y,z坐标的范围都是[-1.0, 1.0]）
+	// 创建含有四个顶点的顶点数组，4个顶点构成一个四面体
+	Vector3f vertices[4];
+	// 四面体的4个顶点的坐标（在进入光栅器之前，x,y,z坐标的范围都是[-1.0, 1.0]）
 	vertices[0] = Vector3f(-1.0f, -1.0f, 0.0f);
-	vertices[1] = Vector3f(1.0f, -1.0f, 0.0f);
-	vertices[2] = Vector3f(0.0f, 1.0f, 0.0f);
+	vertices[1] = Vector3f(0.0f, -1.0f, 1.0f);
+	vertices[2] = Vector3f(1.0f, -1.0f, 0.0f);
+	vertices[3] = Vector3f(0.0f, 1.0f, 0.0f);
 
 	glGenBuffers(1, &VBO);														//分配1个对象的handle
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);											//将handle绑定到目标名称上，之后在目标名称上执行命令
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);	//对目标名称参数绑定顶点数据
+}
+
+static void createIndicesBuffer()
+{
+	// 顶点坐标的索引数组，3个一组
+	unsigned int indices[] = {  0, 3, 1,
+								1, 3, 2,
+								2, 3, 0,
+								0, 1, 2 };
+
+	// 创建索引缓冲器并存入数据
+	glGenBuffers(1, &IBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 }
 
 static void addShader(GLuint shaderProgram, const char* pShaderText, GLenum shaderType)
@@ -157,7 +174,7 @@ int main(int argc, char** argv)
 	//设置窗口属性
 	glutInitWindowSize(480, 480);
 	glutInitWindowPosition(100, 100);
-	glutCreateWindow("Tutorial 04");
+	glutCreateWindow("Tutorial 10");
 
 	//设置回调函数，GLUT通过回调函数与底层窗口系统交互
 	initializeGlutCallbacks();
@@ -175,6 +192,7 @@ int main(int argc, char** argv)
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f); //将帧缓冲的clear color设为(0,0,0,0)(RGBA),4个值的范围都是0.0f~1.0f
 
 	createVertexBuffer(); //创建顶点缓冲器
+	createIndicesBuffer(); //创建索引缓冲器
 
 	// 创建和设置要使用的Shader
 	compileShader();
