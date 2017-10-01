@@ -6,7 +6,7 @@
 #include <gl/glut.h>
 
 #include "ogldev_util.h"
-#include "ogldev_math_3d.h"
+#include "ogldev_pipeline.h"
 
 GLuint VBO; //全局的GLuint引用，用于操作顶点缓冲器对象。大多OpenGL对象都是通过GLuint类型的变量来引用的
 GLuint IBO; //索引缓冲器对象的GLuint引用
@@ -22,13 +22,12 @@ static void RenderScenceCB()
 	// 维护一个不断慢慢扩大的浮点数
 	static float scale = 0.0f;
 	scale += 0.001f;
-	Matrix4f world;
-	world.m[0][0] = cosf(scale); world.m[0][1] = 0.0f; world.m[0][2] = -sinf(scale); world.m[0][3] = 0.0f;
-	world.m[1][0] = 0.0f; world.m[1][1] = 1.0f; world.m[1][2] = 0.0f; world.m[1][3] = 0.0f;
-	world.m[2][0] = sinf(scale); world.m[2][1] = 0.0f; world.m[2][2] = cosf(scale); world.m[2][3] = 0.0f;
-	world.m[3][0] = 0.0f; world.m[3][1] = 0.0f; world.m[3][2] = 0.0f; world.m[3][3] = 1.0f;
+	Pipeline p;
+	p.scale(sinf(scale)*0.1f);
+	p.worldPos(sinf(scale), 0.0f, 0.0f);
+	p.rotate(sinf(scale)*90.0f, sinf(scale)*90.0f, sinf(scale)*90.0f);
 	// 将值通过得到的一致变量位置传递给shader
-	glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, &world.m[0][0]);
+	glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*) p.getTrans());
 
 	//清空帧缓冲（使用clear color）
 	glClear(GL_COLOR_BUFFER_BIT);

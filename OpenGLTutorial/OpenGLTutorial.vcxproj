@@ -146,6 +146,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ogldev_math_3d.h" />
+    <ClInclude Include="ogldev_pipeline.h" />
     <ClInclude Include="ogldev_types.h" />
     <ClInclude Include="ogldev_util.h" />
     <ClInclude Include="stdafx.h" />
@@ -153,6 +154,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ogldev_math_3d.cpp" />
+    <ClCompile Include="ogldev_pipeline.cpp" />
     <ClCompile Include="ogldev_util.cpp" />
     <ClCompile Include="OpenGLTutorial.cpp" />
     <ClCompile Include="stdafx.cpp">

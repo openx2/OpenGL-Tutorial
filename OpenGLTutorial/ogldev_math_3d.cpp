@@ -72,6 +72,11 @@ void Matrix4f::InitScaleTransform(float ScaleX, float ScaleY, float ScaleZ)
     m[3][0] = 0.0f;   m[3][1] = 0.0f;   m[3][2] = 0.0f;   m[3][3] = 1.0f;
 }
 
+void Matrix4f::InitScaleTransform(const Vector3f & scale)
+{
+	InitScaleTransform(scale.x, scale.y, scale.z);
+}
+
 void Matrix4f::InitRotateTransform(float RotateX, float RotateY, float RotateZ)
 {
     Matrix4f rx, ry, rz;
@@ -96,6 +101,11 @@ void Matrix4f::InitRotateTransform(float RotateX, float RotateY, float RotateZ)
     rz.m[3][0] = 0.0f   ; rz.m[3][1] = 0.0f    ; rz.m[3][2] = 0.0f; rz.m[3][3] = 1.0f;
 
     *this = rz * ry * rx;
+}
+
+void Matrix4f::InitRotateTransform(const Vector3f & rotateInfo)
+{
+	InitRotateTransform(rotateInfo.x, rotateInfo.y, rotateInfo.z);
 }
 
 
@@ -132,6 +142,11 @@ void Matrix4f::InitTranslationTransform(float x, float y, float z)
     m[1][0] = 0.0f; m[1][1] = 1.0f; m[1][2] = 0.0f; m[1][3] = y;
     m[2][0] = 0.0f; m[2][1] = 0.0f; m[2][2] = 1.0f; m[2][3] = z;
     m[3][0] = 0.0f; m[3][1] = 0.0f; m[3][2] = 0.0f; m[3][3] = 1.0f;
+}
+
+void Matrix4f::InitTranslationTransform(const Vector3f & translation)
+{
+	InitTranslationTransform(translation.x, translation.y, translation.z);
 }
 
 

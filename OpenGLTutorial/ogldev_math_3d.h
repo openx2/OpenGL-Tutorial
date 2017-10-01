@@ -147,6 +147,14 @@ struct Vector4f
     {        
     }
     
+	Vector4f(const Vector3f& v, float _w)
+	{
+		x = v.x;
+		y = v.y;
+		z = v.z;
+		w = _w;
+	}
+
     Vector4f(float _x, float _y, float _z, float _w)
     {
         x = _x;
@@ -355,9 +363,12 @@ public:
     Matrix4f& Inverse();
     
     void InitScaleTransform(float ScaleX, float ScaleY, float ScaleZ);
+	void InitScaleTransform(const Vector3f& scale);
     void InitRotateTransform(float RotateX, float RotateY, float RotateZ);
+    void InitRotateTransform(const Vector3f& rotateInfo);
     void InitRotateTransform(const Quaternion& quat);
     void InitTranslationTransform(float x, float y, float z);
+    void InitTranslationTransform(const Vector3f& translation);
     void InitCameraTransform(const Vector3f& Target, const Vector3f& Up);
     void InitPersProjTransform(const PersProjInfo& p);
     void InitOrthoProjTransform(const OrthoProjInfo& p);

@@ -33,6 +33,9 @@
     <ClInclude Include="ogldev_types.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="ogldev_pipeline.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="OpenGLTutorial.cpp">
@@ -45,6 +48,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ogldev_pipeline.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
