@@ -222,7 +222,7 @@ inline Vector4f operator/(const Vector4f& l, float f)
 
 struct PersProjInfo
 {
-    float FOV;
+    float FOV; //The vertical field of view
     float Width; 
     float Height;
     float zNear;

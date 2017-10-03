@@ -8,9 +8,15 @@
 #include "ogldev_util.h"
 #include "ogldev_pipeline.h"
 
+#define WINDOW_WIDTH 1024
+#define WINDOW_HEIGHT 768
+
 GLuint VBO; //全局的GLuint引用，用于操作顶点缓冲器对象。大多OpenGL对象都是通过GLuint类型的变量来引用的
 GLuint IBO; //索引缓冲器对象的GLuint引用
 GLuint gWorldLocation; // 平移变换的一致变量world的位置
+
+//透视变换配置参数数据结构
+PersProjInfo gPersProjInfo;
 
 // 定义要使用的vertex shader和fragment shader的文件名，作为文件读取路径
 const char* pVSfilename = "shader.vs";
@@ -21,11 +27,12 @@ static void RenderScenceCB()
 {
 	// 维护一个不断慢慢扩大的浮点数
 	static float scale = 0.0f;
-	scale += 0.001f;
+	scale += 0.1f;
+
 	Pipeline p;
-	p.scale(sinf(scale)*0.1f);
-	p.worldPos(sinf(scale), 0.0f, 0.0f);
-	p.rotate(sinf(scale)*90.0f, sinf(scale)*90.0f, sinf(scale)*90.0f);
+	p.rotate(0.0f, scale, 0.0f);
+	p.worldPos(0.0f, 0.0f, 5.0f);
+	p.setPerspectiveProj(gPersProjInfo); //设置透视配置
 	// 将值通过得到的一致变量位置传递给shader
 	glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*) p.getTrans());
 
@@ -58,10 +65,10 @@ static void createVertexBuffer()
 {
 	// 创建含有四个顶点的顶点数组，4个顶点构成一个四面体
 	Vector3f vertices[4];
-	// 四面体的4个顶点的坐标（在进入光栅器之前，x,y,z坐标的范围都是[-1.0, 1.0]）
-	vertices[0] = Vector3f(-1.0f, -1.0f, 0.0f);
-	vertices[1] = Vector3f(0.0f, -1.0f, 1.0f);
-	vertices[2] = Vector3f(1.0f, -1.0f, 0.0f);
+	// 四面体的4个顶点的坐标
+	vertices[0] = Vector3f(-1.0f, -1.0f, 0.5773f);
+	vertices[1] = Vector3f(0.0f, -1.0f, -1.15475f);
+	vertices[2] = Vector3f(1.0f, -1.0f, 0.5773f);
 	vertices[3] = Vector3f(0.0f, 1.0f, 0.0f);
 
 	glGenBuffers(1, &VBO);														//分配1个对象的handle
@@ -165,15 +172,24 @@ static void compileShader()
 	assert(gWorldLocation != 0xFFFFFFFF);
 }
 
+static void initPresProjInfo()
+{
+	gPersProjInfo.FOV = 30.0f;
+	gPersProjInfo.Width = WINDOW_WIDTH;
+	gPersProjInfo.Height = WINDOW_HEIGHT;
+	gPersProjInfo.zFar = 1.0f;
+	gPersProjInfo.zFar = 100.0f;
+}
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv); //直接引用command line，初始化glut
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA); //设置双缓冲和颜色缓冲
 
 	//设置窗口属性
-	glutInitWindowSize(480, 480);
-	glutInitWindowPosition(100, 100);
-	glutCreateWindow("Tutorial 10");
+	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
+	glutInitWindowPosition(100, 0);
+	glutCreateWindow("Tutorial 12");
 
 	//设置回调函数，GLUT通过回调函数与底层窗口系统交互
 	initializeGlutCallbacks();
@@ -195,6 +211,9 @@ int main(int argc, char** argv)
 
 	// 创建和设置要使用的Shader
 	compileShader();
+
+	// 初始化透视变换配置参数
+	initPresProjInfo();
 
 	//将控制交给GLUT内部循环
 	glutMainLoop();

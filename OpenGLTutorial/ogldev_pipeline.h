@@ -35,10 +35,18 @@ public:
 		m_rotateInfo.z = angleZ;
 	}
 
+	void setPerspectiveProj(const PersProjInfo& p)
+	{
+		m_persProjInfo = p;
+	}
+
 	const Matrix4f* getTrans();
 private:
 	Vector3f m_scale;
 	Vector3f m_worldPos;
 	Vector3f m_rotateInfo;
+
+	PersProjInfo m_persProjInfo;
+
 	Matrix4f m_transformation;
 };
