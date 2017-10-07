@@ -1,5 +1,6 @@
 #pragma once
 #include "ogldev_math_3d.h"
+#include "ogldev_camera.h"
 
 class Pipeline
 {
@@ -40,7 +41,25 @@ public:
 		m_persProjInfo = p;
 	}
 
-	const Matrix4f* getTrans();
+	void setCamera(Vector3f pos, Vector3f target, Vector3f up)
+	{
+		m_camera.pos = pos;
+		m_camera.target = target;
+		m_camera.up = up;
+	}
+
+	void setCamera(const Camera* c)
+	{
+		setCamera(c->getPos(), c->getTarget(), c->getUp());
+	}
+
+	const Matrix4f& getWPTrans();
+	const Matrix4f& getWVTrans();
+	const Matrix4f& getVPTrans();
+	const Matrix4f& getWVPTrans();
+	const Matrix4f& getWorldTrans();
+	const Matrix4f& getViewTrans();
+	const Matrix4f& getProjTrans();
 private:
 	Vector3f m_scale;
 	Vector3f m_worldPos;
@@ -48,5 +67,17 @@ private:
 
 	PersProjInfo m_persProjInfo;
 
-	Matrix4f m_transformation;
+	struct {
+		Vector3f pos; //相机在世界坐标系中的坐标
+		Vector3f target; //相机朝向的方向，单位向量，对应z轴
+		Vector3f up; //从相机朝上的方向，单位向量，对应y轴
+	} m_camera; //相机的右方向由target和up的叉乘得到，对应x轴
+
+	Matrix4f m_WVPtransformation;
+	Matrix4f m_VPtransformation;
+	Matrix4f m_WPtransformation;
+	Matrix4f m_WVtransformation;
+	Matrix4f m_Wtransformation;
+	Matrix4f m_Vtransformation;
+	Matrix4f m_ProjTransformation;
 };

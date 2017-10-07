@@ -145,6 +145,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ogldev_camera.h" />
     <ClInclude Include="ogldev_math_3d.h" />
     <ClInclude Include="ogldev_pipeline.h" />
     <ClInclude Include="ogldev_types.h" />
@@ -153,6 +154,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ogldev_camera.cpp" />
     <ClCompile Include="ogldev_math_3d.cpp" />
     <ClCompile Include="ogldev_pipeline.cpp" />
     <ClCompile Include="ogldev_util.cpp" />

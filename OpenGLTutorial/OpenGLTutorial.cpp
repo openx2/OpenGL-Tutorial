@@ -2,14 +2,13 @@
 //
 
 #include "stdafx.h"
-#include <GL/glew.h>
-#include <gl/glut.h>
 
 #include "ogldev_util.h"
 #include "ogldev_pipeline.h"
+#include "ogldev_camera.h"
 
 #define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 768
+#define WINDOW_HEIGHT 640
 
 GLuint VBO; //全局的GLuint引用，用于操作顶点缓冲器对象。大多OpenGL对象都是通过GLuint类型的变量来引用的
 GLuint IBO; //索引缓冲器对象的GLuint引用
@@ -17,6 +16,8 @@ GLuint gWorldLocation; // 平移变换的一致变量world的位置
 
 //透视变换配置参数数据结构
 PersProjInfo gPersProjInfo;
+//全局相机参数
+Camera* pGameCamera = NULL;
 
 // 定义要使用的vertex shader和fragment shader的文件名，作为文件读取路径
 const char* pVSfilename = "shader.vs";
@@ -31,10 +32,13 @@ static void RenderScenceCB()
 
 	Pipeline p;
 	p.rotate(0.0f, scale, 0.0f);
-	p.worldPos(0.0f, 0.0f, 5.0f);
+	p.worldPos(0.0f, 0.0f, 3.0f);
+
+	p.setCamera(pGameCamera); //设置相机变换
+
 	p.setPerspectiveProj(gPersProjInfo); //设置透视配置
 	// 将值通过得到的一致变量位置传递给shader
-	glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*) p.getTrans());
+	glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*) p.getWVPTrans());
 
 	//清空帧缓冲（使用clear color）
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -53,12 +57,18 @@ static void RenderScenceCB()
 	glutSwapBuffers();
 }
 
+static void SpecialKeyboardCB(int key, int x, int y)
+{
+	pGameCamera->onKeyboard(key);
+}
+
 static void initializeGlutCallbacks()
 {
 	glutDisplayFunc(RenderScenceCB); //设置显示控制回调函数
 	//设置空闲回调函数，在不发生任何事件时会不断调用指定函数。如果指定函数不是渲染函数，
 	//则要在它最后调用glutPostRedisplay()，标记当前窗口要被重新绘制，否则闲置回调会不断调用但不会重新渲染
 	glutIdleFunc(RenderScenceCB);
+	glutSpecialFunc(SpecialKeyboardCB); //响应特殊按键的回调函数
 }
 
 static void createVertexBuffer()
@@ -177,7 +187,7 @@ static void initPresProjInfo()
 	gPersProjInfo.FOV = 30.0f;
 	gPersProjInfo.Width = WINDOW_WIDTH;
 	gPersProjInfo.Height = WINDOW_HEIGHT;
-	gPersProjInfo.zFar = 1.0f;
+	gPersProjInfo.zNear = 1.0f;
 	gPersProjInfo.zFar = 100.0f;
 }
 
@@ -206,6 +216,7 @@ int main(int argc, char** argv)
 	//设置状态（Opengl是一个状态机）
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f); //将帧缓冲的clear color设为(0,0,0,0)(RGBA),4个值的范围都是0.0f~1.0f
 
+	pGameCamera = new Camera();
 	createVertexBuffer(); //创建顶点缓冲器
 	createIndicesBuffer(); //创建索引缓冲器
 
@@ -217,6 +228,8 @@ int main(int argc, char** argv)
 
 	//将控制交给GLUT内部循环
 	glutMainLoop();
+
+	delete pGameCamera; //循环结束后删除相机
     return 0;
 }
 
