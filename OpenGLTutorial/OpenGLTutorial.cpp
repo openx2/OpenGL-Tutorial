@@ -177,7 +177,7 @@ static void initPresProjInfo()
 	gPersProjInfo.FOV = 30.0f;
 	gPersProjInfo.Width = WINDOW_WIDTH;
 	gPersProjInfo.Height = WINDOW_HEIGHT;
-	gPersProjInfo.zFar = 1.0f;
+	gPersProjInfo.zNear = 1.0f;
 	gPersProjInfo.zFar = 100.0f;
 }
 
