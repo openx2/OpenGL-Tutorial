@@ -32,7 +32,7 @@ static void RenderScenceCB()
 
 	Pipeline p;
 	p.rotate(0.0f, scale, 0.0f);
-	p.worldPos(0.0f, 0.0f, 3.0f);
+	p.worldPos(0.0f, 0.0f, 7.0f);
 
 	p.setCamera(pGameCamera); //设置相机变换
 
@@ -49,7 +49,7 @@ static void RenderScenceCB()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);									//在绘制前绑定索引缓冲
 	
 	//调用参数回调来绘制几何图形。这个指令是GPU真正开始工作的地方
-	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);						//绘制四面体。第一个参数是图元类型，第二个是索引个数，第三个是索引的类型（即byte,short,int)，最后一个是从缓冲开始位置到扫描开始位置的偏移量（类型为GLvoid*）
+	glDrawElements(GL_POLYGON, 24, GL_UNSIGNED_INT, 0);						//绘制正方体。第一个参数是图元类型，第二个是索引个数，第三个是索引的类型（即byte,short,int)，最后一个是从缓冲开始位置到扫描开始位置的偏移量（类型为GLvoid*）
 
 	glDisableVertexAttribArray(0);												//禁用顶点属性index，在着色器不用时禁用可以提高性能
 
@@ -73,13 +73,17 @@ static void initializeGlutCallbacks()
 
 static void createVertexBuffer()
 {
-	// 创建含有四个顶点的顶点数组，4个顶点构成一个四面体
-	Vector3f vertices[4];
+	// 创建含有8个顶点的顶点数组，8个顶点构成一个正方体
+	Vector3f vertices[8];
 	// 四面体的4个顶点的坐标
-	vertices[0] = Vector3f(-1.0f, -1.0f, 0.5773f);
-	vertices[1] = Vector3f(0.0f, -1.0f, -1.15475f);
-	vertices[2] = Vector3f(1.0f, -1.0f, 0.5773f);
-	vertices[3] = Vector3f(0.0f, 1.0f, 0.0f);
+	vertices[0] = Vector3f(-1.0f, -1.0f, 1.0f);
+	vertices[1] = Vector3f(1.0f, -1.0f, 1.0f);
+	vertices[2] = Vector3f(1.0f, 1.0f, 1.0f);
+	vertices[3] = Vector3f(-1.0f, 1.0f, 1.0f);
+	vertices[4] = Vector3f(-1.0f, 1.0f, -1.0f);
+	vertices[5] = Vector3f(1.0f, 1.0f, -1.0f);
+	vertices[6] = Vector3f(1.0f, -1.0f, -1.0f);
+	vertices[7] = Vector3f(-1.0f, -1.0f, -1.0f);
 
 	glGenBuffers(1, &VBO);														//分配1个对象的handle
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);											//将handle绑定到目标名称上，之后在目标名称上执行命令
@@ -88,11 +92,13 @@ static void createVertexBuffer()
 
 static void createIndicesBuffer()
 {
-	// 顶点坐标的索引数组，3个一组
-	unsigned int indices[] = {  0, 3, 1,
-								1, 3, 2,
-								2, 3, 0,
-								0, 1, 2 };
+	// 顶点坐标的索引数组，4个一组
+	unsigned int indices[] = {  0, 1, 2, 3,
+								2, 3, 4, 5,
+								4, 5, 6, 7,
+								0, 1, 6, 7,
+								1, 2, 5, 6,
+								0, 3, 4, 7 };
 
 	// 创建索引缓冲器并存入数据
 	glGenBuffers(1, &IBO);
