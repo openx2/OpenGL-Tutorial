@@ -45,6 +45,8 @@ Vector3f& Vector3f::Normalize()
 
 void Vector3f::Rotate(float Angle, const Vector3f& Axe)
 {
+	// Axe为轴,应满足(x^2+y^2+z^2) = 1
+
     const float SinHalfAngle = sinf(ToRadian(Angle/2));
     const float CosHalfAngle = cosf(ToRadian(Angle/2));
 
@@ -52,7 +54,7 @@ void Vector3f::Rotate(float Angle, const Vector3f& Axe)
     const float Ry = Axe.y * SinHalfAngle;
     const float Rz = Axe.z * SinHalfAngle;
     const float Rw = CosHalfAngle;
-    Quaternion RotationQ(Rx, Ry, Rz, Rw);
+    Quaternion RotationQ(Rx, Ry, Rz, Rw); // 这是一个长度为1的单位四元数,因为v^2 = Rx^2+Ry^2+Rz^2 = (x^2+y^2+z^2)*sin(a/2)^2 = sin(a/2)^2, s^2 = cos(a/2)^2,故s^2+v^2 = cos^2 + sin^2 = 1
 
     Quaternion ConjugateQ = RotationQ.Conjugate();
   //  ConjugateQ.Normalize();

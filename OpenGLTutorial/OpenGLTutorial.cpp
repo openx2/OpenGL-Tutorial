@@ -7,8 +7,8 @@
 #include "ogldev_pipeline.h"
 #include "ogldev_camera.h"
 
-#define WINDOW_WIDTH 1024
-#define WINDOW_HEIGHT 640
+#define WINDOW_WIDTH 1366
+#define WINDOW_HEIGHT 768
 
 GLuint VBO; //全局的GLuint引用，用于操作顶点缓冲器对象。大多OpenGL对象都是通过GLuint类型的变量来引用的
 GLuint IBO; //索引缓冲器对象的GLuint引用
@@ -26,13 +26,15 @@ const char* pFSfilename = "shader.fs";
 /*渲染回调函数*/
 static void RenderScenceCB()
 {
+	pGameCamera->onRender();
+
 	// 维护一个不断慢慢扩大的浮点数
 	static float scale = 0.0f;
 	scale += 0.1f;
 
 	Pipeline p;
 	p.rotate(0.0f, scale, 0.0f);
-	p.worldPos(0.0f, 0.0f, 3.0f);
+	p.worldPos(0.0f, 0.0f, 7.0f);
 
 	p.setCamera(pGameCamera); //设置相机变换
 
@@ -62,13 +64,32 @@ static void SpecialKeyboardCB(int key, int x, int y)
 	pGameCamera->onKeyboard(key);
 }
 
+static void PassiveMouseCB(int x, int y)
+{
+	pGameCamera->onMouse(x, y);
+}
+
+static void KeyBoardCB(unsigned char key, int x, int y)
+{
+	switch (key)
+	{
+	case 'q':
+		exit(0);
+		break;
+	default:
+		break;
+	}
+}
+
 static void initializeGlutCallbacks()
 {
 	glutDisplayFunc(RenderScenceCB); //设置显示控制回调函数
 	//设置空闲回调函数，在不发生任何事件时会不断调用指定函数。如果指定函数不是渲染函数，
 	//则要在它最后调用glutPostRedisplay()，标记当前窗口要被重新绘制，否则闲置回调会不断调用但不会重新渲染
 	glutIdleFunc(RenderScenceCB);
-	glutSpecialFunc(SpecialKeyboardCB); //响应特殊按键的回调函数
+	glutSpecialFunc(SpecialKeyboardCB); //注册响应特殊按键的回调函数
+	glutPassiveMotionFunc(PassiveMouseCB); //注册响应鼠标移动的回调函数(没有键被按下)
+	glutKeyboardFunc(KeyBoardCB); //注册响应常规按键的回调函数
 }
 
 static void createVertexBuffer()
@@ -198,11 +219,16 @@ int main(int argc, char** argv)
 
 	//设置窗口属性
 	glutInitWindowSize(WINDOW_WIDTH, WINDOW_HEIGHT);
-	glutInitWindowPosition(100, 0);
-	glutCreateWindow("Tutorial 12");
+	glutInitWindowPosition(100, 100);
+	glutCreateWindow("Tutorial 15");
+	// 使用全屏模式,1344x768表示屏幕分辨率,32表示每个像素包含的bit数
+	glutGameModeString(":32");
+	glutEnterGameMode();
 
 	//设置回调函数，GLUT通过回调函数与底层窗口系统交互
 	initializeGlutCallbacks();
+
+	pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT); //初始化相机,里面会调用glutWarpPointer修改鼠标指针位置,如果glut没有被初始化会调用失败
 
 	// 初始化GLEW，要在glut初始化之后
 	GLenum res = glewInit();
@@ -216,7 +242,6 @@ int main(int argc, char** argv)
 	//设置状态（Opengl是一个状态机）
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f); //将帧缓冲的clear color设为(0,0,0,0)(RGBA),4个值的范围都是0.0f~1.0f
 
-	pGameCamera = new Camera();
 	createVertexBuffer(); //创建顶点缓冲器
 	createIndicesBuffer(); //创建索引缓冲器
 
