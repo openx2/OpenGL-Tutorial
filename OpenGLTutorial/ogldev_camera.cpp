@@ -173,6 +173,9 @@ void Camera::update()
 
 	m_up = m_target.Cross(hAxis);
 	m_up.Normalize();
+
+	//printf("%.02f\n", angleV);
+	//m_target.Print();
 }
 
 void Camera::Init()

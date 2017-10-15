@@ -6,18 +6,35 @@
 #include "ogldev_util.h"
 #include "ogldev_pipeline.h"
 #include "ogldev_camera.h"
+#include "ogldev_texture.h"
 
 #define WINDOW_WIDTH 1366
 #define WINDOW_HEIGHT 768
 
+struct Vertex //顶点数据结构
+{
+	Vector3f m_pos;
+	Vector2f m_tex;
+
+	Vertex() {}
+	Vertex(Vector3f pos, Vector2f tex)
+	{
+		m_pos = pos;
+		m_tex = tex;
+	}
+};
+
 GLuint VBO; //全局的GLuint引用，用于操作顶点缓冲器对象。大多OpenGL对象都是通过GLuint类型的变量来引用的
 GLuint IBO; //索引缓冲器对象的GLuint引用
-GLuint gWorldLocation; // 平移变换的一致变量world的位置
+GLuint gWVPLocation; // 经过世界变换，视角变换和透视投影后的变换矩阵一致变量的位置
+GLuint gSampler; //采样器一致变量
 
 //透视变换配置参数数据结构
 PersProjInfo gPersProjInfo;
 //全局相机参数
 Camera* pGameCamera = NULL;
+//全局纹理对象
+Texture* pTexture = NULL;
 
 // 定义要使用的vertex shader和fragment shader的文件名，作为文件读取路径
 const char* pVSfilename = "shader.vs";
@@ -40,20 +57,24 @@ static void RenderScenceCB()
 
 	p.setPerspectiveProj(gPersProjInfo); //设置透视配置
 	// 将值通过得到的一致变量位置传递给shader
-	glUniformMatrix4fv(gWorldLocation, 1, GL_TRUE, (const GLfloat*) p.getWVPTrans());
+	glUniformMatrix4fv(gWVPLocation, 1, GL_TRUE, (const GLfloat*) p.getWVPTrans());
 
 	//清空帧缓冲（使用clear color）
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	glEnableVertexAttribArray(0);												//开启顶点属性对应的index，让顶点属性能够被shader看到。位置对应的顶点属性索引是0
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);											//再次绑定Buffer准备开始draw call回调。在有多个buffer时可以看出它的作用
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);						//告诉管线解析Buffer中数据的方式
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);									//在绘制前绑定索引缓冲
+	glEnableVertexAttribArray(0);															//开启顶点属性对应的index，让顶点属性能够被shader看到。位置对应的顶点属性索引是0
+	glEnableVertexAttribArray(1);															//纹理坐标对应的顶点属性索引是1
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);														//再次绑定Buffer准备开始draw call回调。在有多个buffer时可以看出它的作用
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), 0);						//告诉管线解析Buffer中数据的方式，0对应位置属性，包括3个float值，不进行标准化，一个数据段的大小为sizeof(Vertex)，偏移量为0字节
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (const GLvoid*) 12);	//和上面一样，1对应纹理坐标，包括2个float值，不进行标准化，一个数据段的大小为sizeof(Vertex)，偏移量为12字节
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);												//在绘制前绑定索引缓冲
 	
+	pTexture->bind(GL_TEXTURE0); //把纹理对象上传到纹理单元中，纹理单元0对应OpenGL的枚举值GL_TEXTURE0
 	//调用参数回调来绘制几何图形。这个指令是GPU真正开始工作的地方
 	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);						//绘制四面体。第一个参数是图元类型，第二个是索引个数，第三个是索引的类型（即byte,short,int)，最后一个是从缓冲开始位置到扫描开始位置的偏移量（类型为GLvoid*）
 
 	glDisableVertexAttribArray(0);												//禁用顶点属性index，在着色器不用时禁用可以提高性能
+	glDisableVertexAttribArray(1);												//同上
 
 	//交换双缓冲机制中前后缓存的位置
 	glutSwapBuffers();
@@ -94,13 +115,11 @@ static void initializeGlutCallbacks()
 
 static void createVertexBuffer()
 {
-	// 创建含有四个顶点的顶点数组，4个顶点构成一个四面体
-	Vector3f vertices[4];
-	// 四面体的4个顶点的坐标
-	vertices[0] = Vector3f(-1.0f, -1.0f, 0.5773f);
-	vertices[1] = Vector3f(0.0f, -1.0f, -1.15475f);
-	vertices[2] = Vector3f(1.0f, -1.0f, 0.5773f);
-	vertices[3] = Vector3f(0.0f, 1.0f, 0.0f);
+	// 创建含有四个顶点的顶点数组，4个顶点构成一个四面体，顶点包括位置和纹理坐标属性
+	Vertex vertices[4] = { Vertex(Vector3f(-1.0f, -1.0f, 0.5773f), Vector2f(0.0f, 0.0f)),
+							Vertex(Vector3f(0.0f, -1.0f, -1.15475f), Vector2f(0.5f, 0.0f)),
+							Vertex(Vector3f(1.0f, -1.0f, 0.5773f), Vector2f(1.0f, 0.0f)),
+							Vertex(Vector3f(0.0f, 1.0f, 0.0f), Vector2f(0.5f, 1.0f)) };
 
 	glGenBuffers(1, &VBO);														//分配1个对象的handle
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);											//将handle绑定到目标名称上，之后在目标名称上执行命令
@@ -198,9 +217,12 @@ static void compileShader()
 
 	// 查询获取一致变量的位置
 	// 在两种情况下会出现错误：1.变量名拼写错误;2.变量没有在程序中使用到，被编译器优化掉了
-	gWorldLocation = glGetUniformLocation(shaderProgram, "gWorld");
+	gWVPLocation = glGetUniformLocation(shaderProgram, "gWVP");
 	// 检查错误
-	assert(gWorldLocation != 0xFFFFFFFF);
+	assert(gWVPLocation != 0xFFFFFFFF);
+	//同上，得到采样器一致变量的位置
+	gSampler = glGetUniformLocation(shaderProgram, "gSampler");
+	assert(gSampler != 0xFFFFFFFF);
 }
 
 static void initPresProjInfo()
@@ -241,12 +263,23 @@ int main(int argc, char** argv)
 
 	//设置状态（Opengl是一个状态机）
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f); //将帧缓冲的clear color设为(0,0,0,0)(RGBA),4个值的范围都是0.0f~1.0f
+	//让OpenGL进行背面剔除
+	glFrontFace(GL_CW); //告诉OpenGL三角形的顶点按顺时针方向指定，从前面看三角形，可以发现顶点缓存中的顶点是顺时针排列的
+	glCullFace(GL_BACK); //告诉OpenGL剔除三角形的背面，这意味着一个对象的内部是不需要被渲染的
+	glEnable(GL_CULL_FACE);//最后启用背面剔除
 
 	createVertexBuffer(); //创建顶点缓冲器
 	createIndicesBuffer(); //创建索引缓冲器
 
 	// 创建和设置要使用的Shader
 	compileShader();
+
+	glUniform1i(gSampler, 0); //把对应的纹理单元索引传递给采样器一致变量，注意这里用的是纹理单元真正的索引值，而不是OpenGL的枚举值GL_TEXTURE0
+
+	pTexture = new Texture(GL_TEXTURE_2D, "test.png"); // 纹理目标为texture2D
+	if (!pTexture->load()) {
+		return 1;
+	}
 
 	// 初始化透视变换配置参数
 	initPresProjInfo();
@@ -255,6 +288,7 @@ int main(int argc, char** argv)
 	glutMainLoop();
 
 	delete pGameCamera; //循环结束后删除相机
+	delete pTexture;
     return 0;
 }
 
