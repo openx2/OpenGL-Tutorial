@@ -71,7 +71,7 @@ static void RenderScenceCB()
 	
 	pTexture->bind(GL_TEXTURE0); //把纹理对象上传到纹理单元中，纹理单元0对应OpenGL的枚举值GL_TEXTURE0
 	//调用参数回调来绘制几何图形。这个指令是GPU真正开始工作的地方
-	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);						//绘制四面体。第一个参数是图元类型，第二个是索引个数，第三个是索引的类型（即byte,short,int)，最后一个是从缓冲开始位置到扫描开始位置的偏移量（类型为GLvoid*）
+	glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);						//绘制正方体。第一个参数是图元类型，第二个是索引个数，第三个是索引的类型（即byte,short,int)，最后一个是从缓冲开始位置到扫描开始位置的偏移量（类型为GLvoid*）
 
 	glDisableVertexAttribArray(0);												//禁用顶点属性index，在着色器不用时禁用可以提高性能
 	glDisableVertexAttribArray(1);												//同上
@@ -128,7 +128,7 @@ static void createVertexBuffer()
 
 static void createIndicesBuffer()
 {
-	// 顶点坐标的索引数组，3个一组
+	// 顶点坐标的索引数组，4个一组
 	unsigned int indices[] = {  0, 3, 1,
 								1, 3, 2,
 								2, 3, 0,
